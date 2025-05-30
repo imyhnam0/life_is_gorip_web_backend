@@ -3,10 +3,13 @@ package com.foodrecord.backend.controller;
 import com.foodrecord.backend.entity.MemoPage;
 import com.foodrecord.backend.repository.MemoPageRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
+
 
 @RestController
 @RequestMapping("/api/pages")
@@ -37,5 +40,20 @@ public class MemoPageController {
     @GetMapping
     public ResponseEntity<List<MemoPage>> getPages(@RequestParam String userId) {
         return ResponseEntity.ok(memoPageRepository.findByUserId(userId));
+    }
+    // ✅ 🔸 제목과 userId 기준으로 내용 업데이트
+    @PutMapping("/update")
+    public ResponseEntity<String> updatePage(@RequestBody MemoPage updatedPage) {
+        Optional<MemoPage> pageOpt = memoPageRepository.findByUserIdAndTitle(
+                updatedPage.getUserId(), updatedPage.getTitle());
+
+        if (pageOpt.isPresent()) {
+            MemoPage page = pageOpt.get();
+            page.setContent(updatedPage.getContent());
+            memoPageRepository.save(page);
+            return ResponseEntity.ok("내용 저장 완료");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("페이지를 찾을 수 없음");
+        }
     }
 }
