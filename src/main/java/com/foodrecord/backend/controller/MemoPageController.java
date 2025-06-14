@@ -56,4 +56,31 @@ public class MemoPageController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("페이지를 찾을 수 없음");
         }
     }
+    @PutMapping("/trash")
+    public ResponseEntity<String> moveToTrash(@RequestBody MemoPage page) {
+        Optional<MemoPage> target = memoPageRepository.findByUserIdAndTitle(page.getUserId(), page.getTitle());
+        if (target.isPresent()) {
+            MemoPage found = target.get();
+            found.setDeleted(true);
+            memoPageRepository.save(found);
+            return ResponseEntity.ok("휴지통으로 이동됨");
+        }
+        return ResponseEntity.status(404).body("페이지 없음");
+    }
+    @DeleteMapping
+    public ResponseEntity<String> deletePage(@RequestParam String userId, @RequestParam String title) {
+        Optional<MemoPage> target = memoPageRepository.findByUserIdAndTitle(userId, title);
+        if (target.isPresent()) {
+            memoPageRepository.delete(target.get());
+            return ResponseEntity.ok("완전히 삭제됨");
+        }
+        return ResponseEntity.status(404).body("페이지 없음");
+    }
+    @GetMapping("/trash")
+    public ResponseEntity<List<MemoPage>> getTrashedPages(@RequestParam String userId) {
+        return ResponseEntity.ok(memoPageRepository.findByUserIdAndDeletedTrue(userId));
+    }
+
+
+
 }
